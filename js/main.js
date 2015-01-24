@@ -71,7 +71,6 @@ var initNewScenario = function() {
 	hat4 = new Hat(300, 300, 15, 15, "images/hat.png");
 	background = new Background("images/bg.png", hat1, hat2, hat3, hat4);
 	
-			
 	option1 = new Option1();
 	option2 = new Option2();
 	option3 = new Option3();
@@ -113,7 +112,7 @@ var Option1 = Class.create(Label, {
 		Label.call(this);
 		this.x = 400;
 		this.y = gameHeight - labelHeight + 1;
-		this.text = "Option 3 here " + hat1.x + " " + hat1.y;
+		this.text = "Option 1 here " + hat1.x + " " + hat1.y;
 	}
 });
 
@@ -122,7 +121,7 @@ var Option2 = Class.create(Label, {
 		Label.call(this);
 		this.x = 700;
 		this.y = gameHeight - labelHeight + 1;
-		this.text = "Option 3 here " + hat2.x + " " + hat2.y;
+		this.text = "Option 2 here " + hat2.x + " " + hat2.y;
 	}
 });
 
@@ -140,7 +139,7 @@ var Option4 = Class.create(Label, {
 		Label.call(this);
 		this.x = 700;
 		this.y = gameHeight - (labelHeight / 2) + 1;
-		this.text = "Option 3 here " + hat4.x + " " + hat4.y;
+		this.text = "Option 4 here " + hat4.x + " " + hat4.y;
 	}
 });
 
