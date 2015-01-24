@@ -50,12 +50,9 @@ var character2;
 var character3;
 var character4;
 
-var hat1;
-var hat2;
-var hat3;
-var hat4;
+var gHats = [];
 
-var controllers = new Array();
+var controllers = [];
 
 //Base Classes
 var Hat = Class.create(Sprite, {
@@ -68,28 +65,31 @@ var Hat = Class.create(Sprite, {
 });
 
 var Background = Class.create(Sprite, {
-	initialize: function(imageName, hat1, hat2, hat3, hat4) {
+	initialize: function(imageName) {
 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
 		this.image = game.assets[imageName];
 		
 		game.rootScene.addChild(this);
-		game.rootScene.addChild(hat1);
-		game.rootScene.addChild(hat2);
-		game.rootScene.addChild(hat3);
-		game.rootScene.addChild(hat4);
 	},
 	enterScene: function() {
 		updateControllers();
+	},
+	placeHats: function(locations) {
+		for (var i=0; i < locations.length; i++) {
+			gHats[i].x = locations[i].x;
+			gHats[i].y = locations[i].y;
+		}
 	}
 });
 
 var initNewScenario = function() {
 	//Eventually, we'll pull a random background
-	hat1 = new Hat(150, 150, 15, 15, "images/hat.png");
-	hat2 = new Hat(200, 200, 15, 15, "images/hat.png");
-	hat3 = new Hat(250, 250, 15, 15, "images/hat.png");
-	hat4 = new Hat(300, 300, 15, 15, "images/hat.png");
-	background = new Background("images/bg.png", hat1, hat2, hat3, hat4);
+	for (var i=0; i < 4; i++) {
+		var hat = new Hat(150 + i*50, 150 + i*50, 15, 15, "images/hat.png");
+		gHats.push(hat);
+		game.rootScene.addChild(hat);
+	}
+	// background = new Background("images/bg.png", gHats);
 	
 	option1 = new Option1();
 	option2 = new Option2();
