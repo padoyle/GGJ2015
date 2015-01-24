@@ -55,7 +55,7 @@ var hat2;
 var hat3;
 var hat4;
 
-var controllers = new Array();
+var controllers = new Array(); //0-3 = controllers. 4 = keyboard last vote. 5-8 = controllers' last vote
 
 //Base Classes
 var Hat = Class.create(Sprite, {
@@ -108,6 +108,11 @@ var initNewScenario = function() {
 var vote = function() {
 	updateControllers();
 	if (controllers) {
+		if (controllers[4] > 0) {
+			var rtn = controllers[4];
+			controllers[4] = 0;
+			return rtn;
+		}
 		var array = new Array();
 		array[0] = controllers[5];
 		array[1] = controllers[6];
@@ -136,9 +141,28 @@ var Start = new Class(Sprite, {
 	},
 	onenterframe: function() {
 		updateControllers();
-		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.start]) {
+		if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.start])) {
 			game.rootScene.removeChild(this);
 			game.rootScene.addChild(new Initial());
+		}
+	}
+});
+
+var Initial = new Class(Sprite, {
+	initialize: function() {
+		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+		this.image = game.assets['images/initialScreen.png'];
+		this.init = false;
+		var initial = this;
+		setTimeout(function() {initial.init = true}, 500);
+	},
+	onenterframe: function() {
+		if (this.init) {
+			updateControllers();
+			if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.back])) {
+				game.rootScene.removeChild(this);
+				initNewScenario();
+			}
 		}
 	}
 });
@@ -169,20 +193,6 @@ var Victory = new Class(Sprite, {
 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
 			game.stop();
 			location.reload();
-		}
-	}
-});
-
-var Initial = new Class(Sprite, {
-	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/initialScreen.png'];
-	},
-	onenterframe: function() {
-		updateControllers();
-		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
-			game.rootScene.removeChild(this);
-			initNewScenario();
 		}
 	}
 });
@@ -349,6 +359,10 @@ window.onload = function() {
 	//Keybindings for the game
 	game.keybind(13, 'Enter');
 	game.keybind(27, 'Esc');
+	game.keybind(49, '1');
+	game.keybind(50, '2');
+	game.keybind(51, '3');
+	game.keybind(52, '4');
 
 	game.onload = function() {
 		start = new Start();
@@ -389,6 +403,18 @@ window.onload = function() {
 			game.rootScene.addChild(debug4);
 			updateControllers();
 			if (controllers) {
+				if (game.input['1']) {
+					controllers[4] = 1;
+				}
+				else if (game.input['2']) {
+					controllers[4] = 2;
+				}
+				else if (game.input['3']) {
+					controllers[4] = 3;
+				}
+				else if (game.input['4']) {
+					controllers[4] = 4;
+				}			
 				if (controllers[0]) {
 					debug1.text = "Controller 1: " + controllers[0].getButton();
 				}
