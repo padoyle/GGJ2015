@@ -2,6 +2,29 @@
 enchant();
 
 //Global variables. Don't change in code
+var CONT_INPUT = {
+	a: 0, //Controller.buttons[blah]
+	b: 1,
+	x: 2,
+	y: 3,
+	lb: 4,
+	rb: 5,
+	lt: 6,
+	rt: 7,
+	back: 8,
+	start: 9,
+	lstick: 10,
+	rstick: 11,
+	up: 12,
+	down: 13,
+	left: 14,
+	right: 15,
+	lstick_x: 0, //Controller.axes[blah]
+	lstick_y: 1,
+	rstick_x: 2,
+	rstick_y: 3
+};
+
 var gameWidth = 1000;
 var gameHeight = 600;
 
@@ -25,6 +48,8 @@ var hat1;
 var hat2;
 var hat3;
 var hat4;
+
+var controller;
 
 //Base Classes
 
@@ -50,19 +75,6 @@ var Background = Class.create(Sprite, {
 	}
 });
 
-var Start = new Class(Sprite, {
-	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/startScreen.png'];
-	},
-	onenterframe: function() {
-		if (game.input['Enter']) {
-			game.rootScene.removeChild(this);
-			game.rootScene.addChild(new Initial());
-		}
-	}
-});
-
 var initNewScenario = function() {
 	//Eventually, we'll pull a random background
 	hat1 = new Hat(150, 150, 15, 15, "images/hat.png");
@@ -85,13 +97,28 @@ var initNewScenario = function() {
 	game.rootScene.addChild(text);
 };
 
+var Start = new Class(Sprite, {
+	initialize: function() {
+		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+		this.image = game.assets['images/startScreen.png'];
+	},
+	onenterframe: function() {
+		updateController();
+		if (game.input['Enter'] || (controller && controller.buttons[CONT_INPUT.start])) {
+			game.rootScene.removeChild(this);
+			game.rootScene.addChild(new Initial());
+		}
+	}
+});
+
 var Initial = new Class(Sprite, {
 	initialize: function() {
 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
 		this.image = game.assets['images/initialScreen.png'];
 	},
 	onenterframe: function() {
-		if (game.input['Enter']) {
+		updateController();
+		if (game.input['Enter'] || (controller && controller.buttons[CONT_INPUT.a])) {
 			game.rootScene.removeChild(this);
 			initNewScenario();
 		}
@@ -142,6 +169,13 @@ var Option4 = Class.create(Label, {
 		this.text = "Option 4 here " + hat4.x + " " + hat4.y;
 	}
 });
+
+function updateController()
+{
+	if (navigator.webkitGetGamepads) {
+		controller = navigator.webkitGetGamepads()[0];
+	}
+}
 
 // When document loads, set up basic game
 window.onload = function() {
