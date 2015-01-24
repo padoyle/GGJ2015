@@ -25,6 +25,8 @@ var CONT_INPUT = {
 	rstick_y: 3
 };
 
+var game;
+
 var gameWidth = 1000;
 var gameHeight = 600;
 
@@ -51,6 +53,8 @@ var character3;
 var character4;
 
 var gHats = [];
+var gOptions = [];
+var gVotes = [null, null, null, null];
 
 var controllers = [];
 
@@ -64,51 +68,43 @@ var Hat = Class.create(Sprite, {
 	}
 });
 
-var Background = Class.create(Sprite, {
-	initialize: function(imageName) {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets[imageName];
-		
-		game.rootScene.addChild(this);
-	},
-	enterScene: function() {
-		updateControllers();
-	},
-	placeHats: function(locations) {
-		for (var i=0; i < locations.length; i++) {
-			gHats[i].x = locations[i].x;
-			gHats[i].y = locations[i].y;
-		}
+var setScenario = function(scenario) {
+	background.image = game.assets[scenario.bgImage];
+
+	for (var i=0; i < scenario.options.length; i++) {
+		optionLabels[i].text = scenario.options[i].text;
 	}
-});
+}
 
 var initNewScenario = function() {
-	//Eventually, we'll pull a random background
 	for (var i=0; i < 4; i++) {
 		var hat = new Hat(150 + i*50, 150 + i*50, 15, 15, "images/hat.png");
 		gHats.push(hat);
 		game.rootScene.addChild(hat);
 	}
-	// background = new Background("images/bg.png", gHats);
+	background = new Background("images/bg.png", gHats);
 	
-	option1 = new Option1();
-	option2 = new Option2();
-	option3 = new Option3();
-	option4 = new Option4();
+	optionLabels = [];
+	optionLabels[0] = new Option1();
+	optionLabels[1] = new Option2();
+	optionLabels[2] = new Option3();
+	optionLabels[3] = new Option4();
 	
-	game.rootScene.addChild(option1);
-	game.rootScene.addChild(option2);
-	game.rootScene.addChild(option3);
-	game.rootScene.addChild(option4);
+	game.rootScene.addChild(optionLabels[0]);
+	game.rootScene.addChild(optionLabels[1]);
+	game.rootScene.addChild(optionLabels[2]);
+	game.rootScene.addChild(optionLabels[3]);
 		
 	text = new ButtonText();
 	game.rootScene.addChild(text);
+
+	setScenario(gScenarios.intro);
 };
 
 var vote = function() {
 	updateControllers();
 	if (controllers) {
-		var array = new Array();
+		var array = [];
 		array[0] = controllers[5];
 		array[1] = controllers[6];
 		array[2] = controllers[7];
@@ -138,7 +134,7 @@ var Start = new Class(Sprite, {
 		updateControllers();
 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.start]) {
 			game.rootScene.removeChild(this);
-			game.rootScene.addChild(new Initial());
+			initNewScenario();
 		}
 	}
 });
@@ -173,19 +169,18 @@ var Victory = new Class(Sprite, {
 	}
 });
 
-var Initial = new Class(Sprite, {
-	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/initialScreen.png'];
-	},
-	onenterframe: function() {
-		updateControllers();
-		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
-			game.rootScene.removeChild(this);
-			initNewScenario();
-		}
-	}
-});
+// var Initial = new Class(Sprite, {
+// 	initialize: function() {
+// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+// 		this.image = game.assets['images/initialScreen.png'];
+// 	},
+// 	onenterframe: function() {
+// 		updateControllers();
+// 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
+// 			game.rootScene.removeChild(this);
+// 		}
+// 	}
+// });
 
 var ButtonText = Class.create(Label, {
 	initialize: function() {
@@ -201,7 +196,6 @@ var Option1 = Class.create(Label, {
 		Label.call(this);
 		this.x = 400;
 		this.y = gameHeight - labelHeight + 1;
-		this.text = "Option 1 here " + hat1.x + " " + hat1.y;
 	}
 });
 
@@ -210,7 +204,6 @@ var Option2 = Class.create(Label, {
 		Label.call(this);
 		this.x = 700;
 		this.y = gameHeight - labelHeight + 1;
-		this.text = "Option 2 here " + hat2.x + " " + hat2.y;
 	}
 });
 
@@ -219,7 +212,6 @@ var Option3 = Class.create(Label, {
 		Label.call(this);
 		this.x = 400;
 		this.y = gameHeight - (labelHeight / 2) + 1;
-		this.text = "Option 3 here " + hat3.x + " " + hat3.y;
 	}
 });
 
@@ -228,9 +220,12 @@ var Option4 = Class.create(Label, {
 		Label.call(this);
 		this.x = 700;
 		this.y = gameHeight - (labelHeight / 2) + 1;
-		this.text = "Option 4 here " + hat4.x + " " + hat4.y;
 	}
 });
+
+// var Driver = Class.create({
+
+// });
 
 var Controller = Class.create(Object, {
 	initialize: function(controller, set, numY, numB, numA, numX, lastNum) {
@@ -300,40 +295,40 @@ var Controller = Class.create(Object, {
 
 function updateControllers() {
 	if (navigator.webkitGetGamepads) {
-		if (navigator.webkitGetGamepads()[3]) {
-			var cont1 = navigator.webkitGetGamepads()[0];
-			var cont2 = navigator.webkitGetGamepads()[1];
-			var cont3 = navigator.webkitGetGamepads()[2];
-			var cont4 = navigator.webkitGetGamepads()[3];
-			controllers[0] = new Controller(cont1, "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(cont2, "buttons", 3, 1, 0, 2, 6); //Y B A X
-			controllers[2] = new Controller(cont3, "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(cont4, "buttons", 3, 1, 0, 2, 8); //Y B A X
+		var gamepads = navigator.webkitGetGamepads();
+		var devices = [];
+		for (var i=0; i < gamepads.length; i++) {
+			if (navigator.getGamepads()[i]) {
+				devices.push(navigator.webkitGetGamepads()[i]);
+			}
 		}
-		else if (navigator.webkitGetGamepads()[2]) {
-			var cont1 = navigator.webkitGetGamepads()[0];
-			var cont2 = navigator.webkitGetGamepads()[1];
-			var cont3 = navigator.webkitGetGamepads()[2];
-			controllers[0] = new Controller(cont1, "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(cont1, "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[2] = new Controller(cont2, "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(cont3, "buttons", 3, 1, 0, 2, 8); //Y B A X
+		if (devices.length == 4) {
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
+			controllers[1] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 6); //Y B A X
+			controllers[2] = new Controller(devices[2], "buttons", 3, 1, 0, 2, 7); //Y B A X
+			controllers[3] = new Controller(devices[3], "buttons", 3, 1, 0, 2, 8); //Y B A X
 		}
-		else if (navigator.webkitGetGamepads()[1]) {
-			var cont1 = navigator.webkitGetGamepads()[0];
-			var cont2 = navigator.webkitGetGamepads()[1];
-			controllers[0] = new Controller(cont1, "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(cont1, "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[2] = new Controller(cont2, "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(cont2, "buttons", 12, 15, 13, 14, 8); //Up Right Down Left
+		else if (devices.length == 3) {
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
+			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 7); //Y B A X
+			controllers[3] = new Controller(devices[2], "buttons", 3, 1, 0, 2, 8); //Y B A X
 		}
-		else if (navigator.webkitGetGamepads()[0]) {
-			var cont1 = navigator.webkitGetGamepads()[0];
-			controllers[0] = new Controller(cont1, "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(cont1, "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[2] = new Controller(cont1, "axes", 1, 0, 0, 0, 7); //Left Stick X-axis=0 Y-axis=1
-			controllers[3] = new Controller(cont1, "axes", 3, 2, 0, 0, 8); //Right Stick X-axis=2 Y-axis=3
+		else if (devices.length == 2) {
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
+			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 7); //Y B A X
+			controllers[3] = new Controller(devices[1], "buttons", 12, 15, 13, 14, 8); //Up Right Down Left
+		}
+		else if (devices.length == 1) {
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
+			controllers[3] = new Controller(devices[0], "axes", 3, 2, 0, 0, 8); //Right Stick X-axis=2 Y-axis=3
+			controllers[2] = new Controller(devices[0], "axes", 1, 0, 0, 0, 7); //Left Stick X-axis=0 Y-axis=1
 		}	
+		else {
+			console.log("no controllers detected");
+		}
 	}
 }
 
@@ -341,7 +336,16 @@ function updateControllers() {
 window.onload = function() {
 	game = new Game(gameWidth, gameHeight);
 	game.preload('images/bg.png', 'images/hat.png', 'images/victoryScreen.png',
-	              'images/startScreen.png', 'images/initialScreen.png');
+	              'images/startScreen.png', 'images/initialScreen.png', 
+	              'images/beer1.jpg',
+	              'images/beer2.jpg',
+	              'images/beer3.jpg',
+	              'images/beer4.jpg',
+	              'images/catnami1.jpg',
+	              'images/furniture.jpg',
+	              'images/intro1.jpg',
+	              'images/intro2.jpg');
+
 	
 	game.fps = 60;
 	game.scale = 1;
@@ -380,7 +384,7 @@ window.onload = function() {
 		debug4.x = gameWidth - 200;
 		debug4.y = 400;
 		debug4.text = "hello";
-		
+
 		game.rootScene.addEventListener('enterframe', function(e) {
 			game.rootScene.addChild(debug);		
 			game.rootScene.addChild(debug1);
