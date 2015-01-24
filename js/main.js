@@ -136,9 +136,39 @@ var Start = new Class(Sprite, {
 	},
 	onenterframe: function() {
 		updateControllers();
-		if (game.input['Enter']) {
+		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.start]) {
 			game.rootScene.removeChild(this);
 			game.rootScene.addChild(new Initial());
+		}
+	}
+});
+
+var Victory = new Class(Sprite, {
+	initialize: function() {
+		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+		this.image = game.assets['images/victoryScreen.png'];
+		this.done = false;
+		this.show = false;
+		var vict = this;
+		setTimeout(function() {vict.done = true}, 5000); //Show victory screen for 5 seconds, then allow refresh
+	},
+	onenterframe: function() {
+		if (!this.done) {
+			return;
+		}
+		if (!this.show) {
+			var lab = new Label();
+			lab.x = 200;
+			lab.y = 300;
+			lab.color = 'white';
+			lab.text = "Press Select to Refresh Page";
+			game.rootScene.addChild(lab);
+		}
+		this.show = true;
+		updateControllers();
+		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
+			game.stop();
+			location.reload();
 		}
 	}
 });
@@ -150,7 +180,7 @@ var Initial = new Class(Sprite, {
 	},
 	onenterframe: function() {
 		updateControllers();
-		if (game.input['Enter']) {
+		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
 			game.rootScene.removeChild(this);
 			initNewScenario();
 		}
@@ -310,7 +340,7 @@ function updateControllers() {
 // When document loads, set up basic game
 window.onload = function() {
 	game = new Game(gameWidth, gameHeight);
-	game.preload('images/bg.png', 'images/hat.png',
+	game.preload('images/bg.png', 'images/hat.png', 'images/victoryScreen.png',
 	              'images/startScreen.png', 'images/initialScreen.png');
 	
 	game.fps = 60;
@@ -372,10 +402,13 @@ window.onload = function() {
 					debug4.text = "Controller 4: " + controllers[3].getButton();
 				}
 			}
-			if (game.input['Esc']) {
+			if (game.input['Esc'] || (controllers && controllers[0].controller.buttons[CONT_INPUT.start])) {
 				var temp = vote();
 				if (temp) {
 					debug.text = temp;
+				}
+				if (temp == 4) {
+					game.rootScene.addChild(new Victory());
 				}
 			}
 		});
