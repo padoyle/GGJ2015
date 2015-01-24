@@ -347,6 +347,23 @@ function updateControllers() {
 	}
 }
 
+var readKeyboard = function() {
+	if (controllers) {
+		if (game.input['1']) {
+			controllers[4] = 1;
+		}
+		else if (game.input['2']) {
+			controllers[4] = 2;
+		}
+		else if (game.input['3']) {
+			controllers[4] = 3;
+		}
+		else if (game.input['4']) {
+			controllers[4] = 4;
+		}
+	}
+}
+
 // When document loads, set up basic game
 window.onload = function() {
 	game = new Game(gameWidth, gameHeight);
@@ -402,19 +419,8 @@ window.onload = function() {
 			game.rootScene.addChild(debug3);
 			game.rootScene.addChild(debug4);
 			updateControllers();
-			if (controllers) {
-				if (game.input['1']) {
-					controllers[4] = 1;
-				}
-				else if (game.input['2']) {
-					controllers[4] = 2;
-				}
-				else if (game.input['3']) {
-					controllers[4] = 3;
-				}
-				else if (game.input['4']) {
-					controllers[4] = 4;
-				}			
+			readKeyboard();
+			if (controllers) {			
 				if (controllers[0]) {
 					debug1.text = "Controller 1: " + controllers[0].getButton();
 				}
