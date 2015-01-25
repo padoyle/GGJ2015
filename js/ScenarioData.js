@@ -34,6 +34,7 @@ var Scenario = Class.create({
 		this.text = _text;
 		this.wdwdnText = _wdwdnText;
 		this.bgImage = _bgImage;
+		this.options = [];
 	},
 
 	setOptions: function(_options) {
@@ -49,7 +50,7 @@ var VoteOption = Class.create({
 		Label.apply(this);
 		this.text = _text;
 		this.destination = _dest;
-		if (_randomize)
+		if (_randomize != undefined)
 			this.destination = this.getRandomScenario();
 	},
 
@@ -98,7 +99,7 @@ var	gOps = {
 
 // Add all the options to the scenarios
 gScenarios.intro.setOptions([gOps.pressButton, gOps.grabBeer]);
-gScenarios.beer1.setOptions([gOps.pressButton, gOps.hitOnWoman]);
+gScenarios.beer1.setOptions([gOps.pressButton, gOps.keepDrinking, gOps.hitOnWoman]);
 gScenarios.beer2.setOptions([gOps.pressButton, gOps.keepDrinking]);
 gScenarios.beer3.setOptions([gOps.pressButtonAtBar, gOps.insultBarkeep, gOps.leaveBar]);
 gScenarios.beer4.setOptions([gOps.leaveBar]);

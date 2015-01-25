@@ -32,7 +32,7 @@ var gameHeight = 600;
 
 var labelHeight = 100;
 
-var text;
+var wdwdnLabel;
 
 var debug;
 var debug1;
@@ -41,6 +41,7 @@ var debug3;
 var debug4;
 
 var background;
+var currScenario;
 
 var option1;
 var option2;
@@ -69,10 +70,15 @@ var Hat = Class.create(Sprite, {
 });
 
 var setScenario = function(scenario) {
+	currScenario = scenario;
 	background.image = game.assets[scenario.bgImage];
+	wdwdnLabel.text = scenario.wdwdnText;
 
 	for (var i=0; i < scenario.options.length; i++) {
-		optionLabels[i].text = scenario.options[i].text;
+		optionLabels[i].text = "" + (i+1) + ". " + scenario.options[i].text;
+	}
+	for (var i=0; i < controllers.length; i++) {
+		controllers[i].clearVote();
 	}
 }
 
@@ -95,34 +101,39 @@ var initNewScenario = function() {
 	game.rootScene.addChild(optionLabels[2]);
 	game.rootScene.addChild(optionLabels[3]);
 		
-	text = new ButtonText();
-	game.rootScene.addChild(text);
+	wdwdnLabel = new ButtonText();
+	game.rootScene.addChild(wdwdnLabel);
+
+	game.rootScene.addChild(debug);		
+	game.rootScene.addChild(debug1);
+	game.rootScene.addChild(debug2);
+	game.rootScene.addChild(debug3);
+	game.rootScene.addChild(debug4);
 
 	setScenario(gScenarios.intro);
 };
 
-var vote = function() {
-	updateControllers();
-	if (controllers) {
-		var array = [];
-		array[0] = controllers[5];
-		array[1] = controllers[6];
-		array[2] = controllers[7];
-		array[3] = controllers[8];
+var getVote = function() {
+	// if (controllers) {
+	// 	var array = [];
+	// 	array[0] = controllers[5];
+	// 	array[1] = controllers[6];
+	// 	array[2] = controllers[7];
+	// 	array[3] = controllers[8];
 		
-		if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
-			return null;
-		}
-		var num = array[Math.floor(Math.random() * 4)];
-		debug.text = "" + num;
+	// 	if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
+	// 		return null;
+	// 	}
+	// 	var num = array[Math.floor(Math.random() * 4)];
+	// 	debug.text = "" + num;
 		
-		controllers[5] = 0;
-		controllers[6] = 0;
-		controllers[7] = 0;
-		controllers[8] = 0;
+	// 	controllers[5] = 0;
+	// 	controllers[6] = 0;
+	// 	controllers[7] = 0;
+	// 	controllers[8] = 0;
 		
-		return num;
-	}
+	// 	return num;
+	// }
 }
 
 var Start = new Class(Sprite, {
@@ -223,16 +234,13 @@ var Option4 = Class.create(Label, {
 	}
 });
 
-// var Driver = Class.create({
-
-// });
-
 var Controller = Class.create(Object, {
-	initialize: function(controller, set, numY, numB, numA, numX, lastNum) {
+	initialize: function(controller, set, numY, numB, numA, numX) {
 		Object.call(this);
+		this.pressed = false;
+		this.vote = 0;
 		this.controller = controller;
 		this.set = set;
-		this.lastNum = lastNum;
 		if (this.set == "axes") {
 			this.y = numY;
 			this.x = numB;
@@ -244,58 +252,61 @@ var Controller = Class.create(Object, {
 			this.numX = numX;
 		}
 	},
-	setLast: function(num) {
-		controllers[this.lastNum] = num;
-	},
-	getButton: function() {
+
+	poll: function() {
+		var newValue = 0;
 		if (this.set == "axes") {
 			if (this.controller.axes[this.y] >= .5) {
-				this.setLast(3);
-				return 3;
+				newValue = 3;
 			}
 			else if (this.controller.axes[this.y] <= -.5) {
-				this.setLast(1);
-				return 1;
+				newValue = 1;
 			}
 			else if (this.controller.axes[this.x] >= .5) {
-				this.setLast(2);
-				return 2;
+				newValue = 2;
 			}	
 			else if (this.controller.axes[this.x] <= -.5) {
-				this.setLast(4);
-				return 4;
-			}
-			else {
-				return 0;
+				newValue = 4;
 			}
 		}
 		else if (this.set == "buttons") {
 			if (this.controller.buttons[this.numY]) {
-				this.setLast(1);
-				return 1;
+				newValue = 1;
 			}
 			else if (this.controller.buttons[this.numB]) {
-				this.setLast(2);
-				return 2;
+				newValue = 2;
 			}
 			else if (this.controller.buttons[this.numA]) {
-				this.setLast(3);
-				return 3;
+				newValue = 3;
 			}
 			else if (this.controller.buttons[this.numX]) {
-				this.setLast(4);
-				return 4;
-			}			
-			else {
-				return 0;
+				newValue = 4;
 			}
 		}
+		if (newValue > 0)
+			this.pressed = true;
+		else
+			this.pressed = false;
+
+		if (this.pressed) {
+			this.vote = newValue;
+		}
+	},
+
+	getVote: function() {
+		return (this.pressed) ? 0 : this.vote;
+	},
+
+	clearVote: function() {
+		this.vote = 0;
 	}
 });
 
 function updateControllers() {
 	if (navigator.webkitGetGamepads) {
 		var gamepads = navigator.webkitGetGamepads();
+		if (gamepads.length == controllers.length)
+			return;
 		var devices = [];
 		for (var i=0; i < gamepads.length; i++) {
 			if (navigator.getGamepads()[i]) {
@@ -303,34 +314,73 @@ function updateControllers() {
 			}
 		}
 		if (devices.length == 4) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 6); //Y B A X
-			controllers[2] = new Controller(devices[2], "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(devices[3], "buttons", 3, 1, 0, 2, 8); //Y B A X
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[1] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[2] = new Controller(devices[2], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[3] = new Controller(devices[3], "buttons", 3, 1, 0, 2); //Y B A X
 		}
 		else if (devices.length == 3) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(devices[2], "buttons", 3, 1, 0, 2, 8); //Y B A X
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
+			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[3] = new Controller(devices[2], "buttons", 3, 1, 0, 2); //Y B A X
 		}
 		else if (devices.length == 2) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2, 7); //Y B A X
-			controllers[3] = new Controller(devices[1], "buttons", 12, 15, 13, 14, 8); //Up Right Down Left
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
+			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[3] = new Controller(devices[1], "buttons", 12, 15, 13, 14); //Up Right Down Left
 		}
 		else if (devices.length == 1) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2, 5); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14, 6); //Up Right Down Left
-			controllers[3] = new Controller(devices[0], "axes", 3, 2, 0, 0, 8); //Right Stick X-axis=2 Y-axis=3
-			controllers[2] = new Controller(devices[0], "axes", 1, 0, 0, 0, 7); //Left Stick X-axis=0 Y-axis=1
+			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
+			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
+			controllers[3] = new Controller(devices[0], "axes", 3, 2, 0, 0); //Right Stick X-axis=2 Y-axis=3
+			controllers[2] = new Controller(devices[0], "axes", 1, 0, 0, 0); //Left Stick X-axis=0 Y-axis=1
 		}	
 		else {
 			console.log("no controllers detected");
 		}
 	}
 }
+
+var gameLoop = function(event) {
+	updateControllers();
+	if (controllers) {
+		if (controllers[0]) {
+			debug1.text = "Controller 1: " + controllers[0].vote;
+		}
+		if (controllers[1]) {
+			debug2.text = "Controller 2: " + controllers[1].vote;
+		}
+		if (controllers[2]) {
+			debug3.text = "Controller 3: " + controllers[2].vote;
+		}
+		if (controllers[3]) {
+			debug4.text = "Controller 4: " + controllers[3].vote;
+		}
+	}
+	// This is really delicate right now; getButton can only be called once per loop if you
+	// want to actually pick up when it changes.
+	controllers[0].poll();
+	var votedOption = controllers[0].getVote();
+	console.log(votedOption);
+	if (votedOption > 0) {
+		if (currScenario.options.length >= votedOption-1) {
+			console.log("Voted for option " + votedOption);
+			setScenario(currScenario.options[votedOption-1].destination);
+		}
+	}
+
+	// if (game.input['Esc'] || (controllers && controllers[0].controller.buttons[CONT_INPUT.start])) {
+	// 	var temp = vote();
+	// 	if (temp) {
+	// 		debug.text = temp;
+	// 	}
+	// 	if (temp == 4) {
+	// 		game.rootScene.addChild(new Victory());
+	// 	}
+	// }
+};
 
 // When document loads, set up basic game
 window.onload = function() {
@@ -359,63 +409,28 @@ window.onload = function() {
 		game.rootScene.addChild(start);
 
 		debug = new Label();
-		debug.color = 'white';
 		debug.x = gameWidth - 200;
 		debug.y = 50;
 		debug.text = "hello";
 		
 		debug1 = new Label();
-		debug1.color = 'white';
 		debug1.x = gameWidth - 200;
 		debug1.y = 100;
 		debug1.text = "hello";
 		debug2 = new Label();
-		debug2.color = 'white';
 		debug2.x = gameWidth - 200;
 		debug2.y = 200;
 		debug2.text = "hello";
 		debug3 = new Label();
-		debug3.color = 'white';
 		debug3.x = gameWidth - 200;
 		debug3.y = 300;
 		debug3.text = "hello";
 		debug4 = new Label();
-		debug4.color = 'white';
 		debug4.x = gameWidth - 200;
 		debug4.y = 400;
 		debug4.text = "hello";
 
-		game.rootScene.addEventListener('enterframe', function(e) {
-			game.rootScene.addChild(debug);		
-			game.rootScene.addChild(debug1);
-			game.rootScene.addChild(debug2);
-			game.rootScene.addChild(debug3);
-			game.rootScene.addChild(debug4);
-			updateControllers();
-			if (controllers) {
-				if (controllers[0]) {
-					debug1.text = "Controller 1: " + controllers[0].getButton();
-				}
-				if (controllers[1]) {
-					debug2.text = "Controller 2: " + controllers[1].getButton();
-				}
-				if (controllers[2]) {
-					debug3.text = "Controller 3: " + controllers[2].getButton();
-				}
-				if (controllers[3]) {
-					debug4.text = "Controller 4: " + controllers[3].getButton();
-				}
-			}
-			if (game.input['Esc'] || (controllers && controllers[0].controller.buttons[CONT_INPUT.start])) {
-				var temp = vote();
-				if (temp) {
-					debug.text = temp;
-				}
-				if (temp == 4) {
-					game.rootScene.addChild(new Victory());
-				}
-			}
-		});
+		game.rootScene.addEventListener('enterframe', gameLoop);
 	};
     game.start();
 };
