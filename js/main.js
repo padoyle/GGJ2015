@@ -35,10 +35,6 @@ var labelHeight = 100;
 var wdwdnLabel;
 
 var debug;
-var debug1;
-var debug2;
-var debug3;
-var debug4;
 
 var background;
 var currScenario;
@@ -58,6 +54,7 @@ var gOptions = [];
 var gVotes = [null, null, null, null];
 
 var controllers = [];  //0-3 = controllers. 4 = keyboard last vote. 5-8 = controllers' last vote
+var endingsReached = [];
 
 //Base Classes
 var Hat = Class.create(Sprite, {
@@ -69,13 +66,31 @@ var Hat = Class.create(Sprite, {
 	}
 });
 
+var setEndingsText = function() {
+	 var text = "Endings reached:<br>";
+	 for (var i=0; i < endingsReached.length; i++) {
+	 	text += endingsReached[i].title + "<br>";
+	 }
+	 debug.text = text;
+}
+
 var setScenario = function(scenario) {
 	currScenario = scenario;
 	background.image = game.assets[scenario.bgImage];
 	wdwdnLabel.text = scenario.wdwdnText;
 
-	for (var i=0; i < scenario.options.length; i++) {
-		optionLabels[i].text = "" + (i+1) + ". " + scenario.options[i].text;
+	for (var i=0; i < optionLabels.length; i++) {
+		if (scenario.options[i])
+			optionLabels[i].text = optionLabels[i].baseText + scenario.options[i].text;
+		else 
+			optionLabels[i].text = "";
+
+		if (scenario.options[i] == gOps.restart) {
+			if (endingsReached.indexOf(scenario) == -1) {
+				endingsReached.push(scenario);
+				setEndingsText();
+			}
+		}
 	}
 	for (var i=0; i < controllers.length; i++) {
 		controllers[i].clearVote();
@@ -105,12 +120,8 @@ var initNewScenario = function() {
 	game.rootScene.addChild(wdwdnLabel);
 
 	game.rootScene.addChild(debug);		
-	game.rootScene.addChild(debug1);
-	game.rootScene.addChild(debug2);
-	game.rootScene.addChild(debug3);
-	game.rootScene.addChild(debug4);
 
-	setScenario(gScenarios.intro);
+	setScenario(gScenarios.intro1);
 };
 
 var vote = function() {
@@ -217,6 +228,7 @@ var ButtonText = Class.create(Label, {
 var Option1 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
+		this.baseText = "Y. "
 		this.x = 400;
 		this.y = gameHeight - labelHeight + 1;
 	}
@@ -225,6 +237,7 @@ var Option1 = Class.create(Label, {
 var Option2 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
+		this.baseText = "B. "
 		this.x = 700;
 		this.y = gameHeight - labelHeight + 1;
 	}
@@ -233,6 +246,7 @@ var Option2 = Class.create(Label, {
 var Option3 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
+		this.baseText = "A. "
 		this.x = 400;
 		this.y = gameHeight - (labelHeight / 2) + 1;
 	}
@@ -241,6 +255,7 @@ var Option3 = Class.create(Label, {
 var Option4 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
+		this.baseText = "X. "
 		this.x = 700;
 		this.y = gameHeight - (labelHeight / 2) + 1;
 	}
@@ -357,44 +372,21 @@ function updateControllers() {
 
 var gameLoop = function(event) {
 	updateControllers();
-	if (controllers) {
-		if (controllers[0]) {
-			debug1.text = "Controller 1: " + controllers[0].vote;
-		}
-		if (controllers[1]) {
-			debug2.text = "Controller 2: " + controllers[1].vote;
-		}
-		if (controllers[2]) {
-			debug3.text = "Controller 3: " + controllers[2].vote;
-		}
-		if (controllers[3]) {
-			debug4.text = "Controller 4: " + controllers[3].vote;
-		}
-	}
 	// This is really delicate right now; getButton can only be called once per loop if you
 	// want to actually pick up when it changes.
 	readKeyboard();
 	for (var i=0; i < controllers.length; i++) {
 		controllers[i].poll();
 	}
-	var votedOption = controllers[0].getVote();
-	console.log(votedOption);
-	if (votedOption > 0) {
-		if (currScenario.options.length >= votedOption-1) {
-			console.log("Voted for option " + votedOption);
-			setScenario(currScenario.options[votedOption-1].destination);
+	if (controllers[0]) {
+		var votedOption = controllers[0].getVote();
+		if (votedOption > 0) {
+			if (currScenario.options.length > votedOption-1) {
+				console.log("Voted for option " + votedOption);
+				setScenario(currScenario.options[votedOption-1].getDestination());
+			}
 		}
 	}
-
-	// if (game.input['Esc'] || (controllers && controllers[0].controller.buttons[CONT_INPUT.start])) {
-	// 	var temp = vote();
-	// 	if (temp) {
-	// 		debug.text = temp;
-	// 	}
-	// 	if (temp == 4) {
-	// 		game.rootScene.addChild(new Victory());
-	// 	}
-	// }
 };
 
 var readKeyboard = function() {
@@ -424,10 +416,25 @@ window.onload = function() {
 	              'images/beer2.jpg',
 	              'images/beer3.jpg',
 	              'images/beer4.jpg',
+	              'images/beer5.jpg',
+	              'images/beer6.jpg',
+	              'images/beer7.jpg',
 	              'images/catnami1.jpg',
+	              'images/catastrophe.jpg',
+	              'images/falling1.jpg',
 	              'images/furniture.jpg',
+	              'images/genericdeath.jpg',
 	              'images/intro1.jpg',
-	              'images/intro2.jpg');
+	              'images/intro2.jpg',
+	              'images/ml1.jpg',
+	              'images/ml2.jpg',
+	              'images/ml3.jpg',
+	              'images/ml4.jpg',
+	              'images/ml5.jpg',
+	              'images/ml6.jpg',
+	              'images/mlend.jpg',
+	              'images/moa1.jpg',
+	              'images/moa2.jpg');
 
 	
 	game.fps = 60;
@@ -448,25 +455,8 @@ window.onload = function() {
 		debug = new Label();
 		debug.x = gameWidth - 200;
 		debug.y = 50;
-		debug.text = "hello";
+		debug.text = "";
 		
-		debug1 = new Label();
-		debug1.x = gameWidth - 200;
-		debug1.y = 100;
-		debug1.text = "hello";
-		debug2 = new Label();
-		debug2.x = gameWidth - 200;
-		debug2.y = 200;
-		debug2.text = "hello";
-		debug3 = new Label();
-		debug3.x = gameWidth - 200;
-		debug3.y = 300;
-		debug3.text = "hello";
-		debug4 = new Label();
-		debug4.x = gameWidth - 200;
-		debug4.y = 400;
-		debug4.text = "hello";
-
 		game.rootScene.addEventListener('enterframe', gameLoop);
 	};
     game.start();
