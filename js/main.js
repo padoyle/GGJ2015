@@ -28,13 +28,14 @@ var CONT_INPUT = {
 var game;
 
 var gameWidth = 1000;
-var gameHeight = 600;
+var gameHeight = 650;
 
+var backgroundHeight = 100;
 var labelHeight = 100;
 
+var endingsLabel;
 var wdwdnLabel;
-
-var debug;
+var descriptionLabel;
 
 var background;
 var currScenario;
@@ -43,6 +44,8 @@ var option1;
 var option2;
 var option3;
 var option4;
+
+var optionLabels = [];
 
 var character1;
 var character2;
@@ -67,17 +70,18 @@ var Hat = Class.create(Sprite, {
 });
 
 var setEndingsText = function() {
-	 var text = "Endings reached:<br>";
+	 var text = "Endings reached (" + endingsReached.length + "/5):<br>";
 	 for (var i=0; i < endingsReached.length; i++) {
 	 	text += endingsReached[i].title + "<br>";
 	 }
-	 debug.text = text;
+	 endingsLabel.text = text;
 }
 
 var setScenario = function(scenario) {
 	currScenario = scenario;
 	background.image = game.assets[scenario.bgImage];
 	wdwdnLabel.text = scenario.wdwdnText;
+	descriptionLabel.text = scenario.text;
 
 	for (var i=0; i < optionLabels.length; i++) {
 		if (scenario.options[i])
@@ -97,15 +101,19 @@ var setScenario = function(scenario) {
 	}
 }
 
-var initNewScenario = function() {
-	for (var i=0; i < 4; i++) {
-		var hat = new Hat(150 + i*50, 150 + i*50, 15, 15, "images/hat.png");
-		gHats.push(hat);
-		game.rootScene.addChild(hat);
-	}
+var setupScene = function() {
+	descriptionLabel = new Label();
+	descriptionLabel.x = 12;
+	descriptionLabel.y = 8;
+	descriptionLabel.width = gameWidth - 40;
+	descriptionLabel.text = "";
+	descriptionLabel.font = "18px AYearWithoutRain";
+	game.rootScene.addChild(descriptionLabel);
+
 	background = new Background("images/bg.png", gHats);
-	
-	optionLabels = [];
+	background.y = backgroundHeight;
+	background.height = (gameHeight - labelHeight) - backgroundHeight;
+
 	optionLabels[0] = new Option1();
 	optionLabels[1] = new Option2();
 	optionLabels[2] = new Option3();
@@ -119,39 +127,52 @@ var initNewScenario = function() {
 	wdwdnLabel = new ButtonText();
 	game.rootScene.addChild(wdwdnLabel);
 
-	game.rootScene.addChild(debug);		
+	endingsLabel = new Label();
+	endingsLabel.x = 10;
+	endingsLabel.y = backgroundHeight + 8;
+	endingsLabel.text = "";
+	endingsLabel.font = "14px AYearWithoutRain"
+	game.rootScene.addChild(endingsLabel);
+
+	// Some simple dividers
+	var topDiv = new Divider();
+	topDiv.y = backgroundHeight - 1;
+	var bottomDiv = new Divider();
+	bottomDiv.y = gameHeight - labelHeight - 1;
+	game.rootScene.addChild(topDiv);
+	game.rootScene.addChild(bottomDiv);
 
 	setScenario(gScenarios.intro1);
 };
 
-var vote = function() {
-	updateControllers();
-	if (controllers) {
-		if (controllers[4] > 0) {
-			var rtn = controllers[4];
-			controllers[4] = 0;
-			return rtn;
-		}
-		var array = new Array();
-		array[0] = controllers[5];
-		array[1] = controllers[6];
-		array[2] = controllers[7];
-		array[3] = controllers[8];
+// var vote = function() {
+// 	updateControllers();
+// 	if (controllers) {
+// 		if (controllers[4] > 0) {
+// 			var rtn = controllers[4];
+// 			controllers[4] = 0;
+// 			return rtn;
+// 		}
+// 		var array = new Array();
+// 		array[0] = controllers[5];
+// 		array[1] = controllers[6];
+// 		array[2] = controllers[7];
+// 		array[3] = controllers[8];
 
-		if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
-			return null;
-		}
-		var num = array[Math.floor(Math.random() * 4)];
-		debug.text = "" + num;
+// 		if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
+// 			return null;
+// 		}
+// 		var num = array[Math.floor(Math.random() * 4)];
+// 		endingsLabel.text = "" + num;
 		
-		controllers[5] = 0;
-		controllers[6] = 0;
-		controllers[7] = 0;
-		controllers[8] = 0;
+// 		controllers[5] = 0;
+// 		controllers[6] = 0;
+// 		controllers[7] = 0;
+// 		controllers[8] = 0;
 		
-		return num;
-	}
-}
+// 		return num;
+// 	}
+// }
 
 var Start = new Class(Sprite, {
 	initialize: function() {
@@ -162,74 +183,85 @@ var Start = new Class(Sprite, {
 		updateControllers();
 		if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.start])) {
 			game.rootScene.removeChild(this);
-			initNewScenario();
+			setupScene();
 		}
 	}
 });
 
-var Initial = new Class(Sprite, {
-	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/initialScreen.png'];
-		this.init = false;
-		var initial = this;
-		setTimeout(function() {initial.init = true}, 500);
-	},
-	onenterframe: function() {
-		if (this.init) {
-			updateControllers();
-			if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.back])) {
-				game.rootScene.removeChild(this);
-				initNewScenario();
-			}
-		}
-	}
-});
+// var Initial = new Class(Sprite, {
+// 	initialize: function() {
+// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+// 		this.image = game.assets['images/initialScreen.png'];
+// 		this.init = false;
+// 		var initial = this;
+// 		setTimeout(function() {initial.init = true}, 500);
+// 	},
+// 	onenterframe: function() {
+// 		if (this.init) {
+// 			updateControllers();
+// 			if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.back])) {
+// 				game.rootScene.removeChild(this);
+// 				setupScene();
+// 			}
+// 		}
+// 	}
+// });
 
-var Victory = new Class(Sprite, {
+// var Victory = new Class(Sprite, {
+// 	initialize: function() {
+// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+// 		this.image = game.assets['images/victoryScreen.png'];
+// 		this.done = false;
+// 		this.show = false;
+// 		var vict = this;
+// 		setTimeout(function() {vict.done = true}, 5000); //Show victory screen for 5 seconds, then allow refresh
+// 	},
+// 	onenterframe: function() {
+// 		if (!this.done) {
+// 			return;
+// 		}
+// 		if (!this.show) {
+// 			var lab = new Label();
+// 			lab.x = 200;
+// 			lab.y = 300;
+// 			lab.color = 'white';
+// 			lab.text = "Press Select to Refresh Page";
+// 			game.rootScene.addChild(lab);
+// 		}
+// 		this.show = true;
+// 		updateControllers();
+// 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
+// 			game.stop();
+// 			location.reload();
+// 		}
+// 	}
+// });
+
+var Divider = Class.create(Label, {
 	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/victoryScreen.png'];
-		this.done = false;
-		this.show = false;
-		var vict = this;
-		setTimeout(function() {vict.done = true}, 5000); //Show victory screen for 5 seconds, then allow refresh
-	},
-	onenterframe: function() {
-		if (!this.done) {
-			return;
-		}
-		if (!this.show) {
-			var lab = new Label();
-			lab.x = 200;
-			lab.y = 300;
-			lab.color = 'white';
-			lab.text = "Press Select to Refresh Page";
-			game.rootScene.addChild(lab);
-		}
-		this.show = true;
-		updateControllers();
-		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
-			game.stop();
-			location.reload();
-		}
+		Label.call(this);
+		this.backgroundColor = "#999";
+		this.width = gameWidth;
+		this.height = 2;
 	}
 });
 
 var ButtonText = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
+		this.font = "18px AYearWithoutRain";
 		this.x = 50;
 		this.y = gameHeight - (labelHeight * 3 / 4);
-		this.text = "PUSH THE FOLKING BUTTON";
+		this.text = "PUSH THE BUTTON";
 	}
 });
 
 var Option1 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
-		this.baseText = "Y. "
+		this.baseText = "Y. ";
 		this.x = 400;
+		this.width = gameWidth - this.x;
 		this.y = gameHeight - labelHeight + 1;
 	}
 });
@@ -237,27 +269,30 @@ var Option1 = Class.create(Label, {
 var Option2 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
-		this.baseText = "B. "
-		this.x = 700;
-		this.y = gameHeight - labelHeight + 1;
+		this.baseText = "B. ";
+		this.x = 400;
+		this.width = gameWidth - this.x;
+		this.y = gameHeight - labelHeight * (3/4);
 	}
 });
 
 var Option3 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
-		this.baseText = "A. "
+		this.baseText = "A. ";
 		this.x = 400;
-		this.y = gameHeight - (labelHeight / 2) + 1;
+		this.width = gameWidth - this.x;
+		this.y = gameHeight - (labelHeight / 2);
 	}
 });
 
 var Option4 = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
-		this.baseText = "X. "
-		this.x = 700;
-		this.y = gameHeight - (labelHeight / 2) + 1;
+		this.baseText = "X. ";
+		this.x = 400;
+		this.width = gameWidth - this.x;
+		this.y = gameHeight - (labelHeight / 4);
 	}
 });
 
@@ -378,7 +413,15 @@ var gameLoop = function(event) {
 	for (var i=0; i < controllers.length; i++) {
 		controllers[i].poll();
 	}
+	for (var i=0; i < optionLabels.length; i++) {
+		optionLabels[i].font = "16px AYearWithoutRain";
+		optionLabels[i].color = "#111";
+	}
 	if (controllers[0]) {
+		if (controllers[0].pressed) {
+			optionLabels[controllers[0].vote - 1].font = "18px AYearWithoutRain";
+			optionLabels[controllers[0].vote - 1].color = "blue";
+		}
 		var votedOption = controllers[0].getVote();
 		if (votedOption > 0) {
 			if (currScenario.options.length > votedOption-1) {
@@ -451,11 +494,7 @@ window.onload = function() {
 	game.onload = function() {
 		start = new Start();
 		game.rootScene.addChild(start);
-
-		debug = new Label();
-		debug.x = gameWidth - 200;
-		debug.y = 50;
-		debug.text = "";
+		game.rootScene.color = "#221522";
 		
 		game.rootScene.addEventListener('enterframe', gameLoop);
 	};

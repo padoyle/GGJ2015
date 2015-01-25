@@ -3,13 +3,37 @@
 <head>
 	<meta charset="utf-8">
 	<title>What do you do?</title>
-	<script src="js/lib/enchant.js"></script>
-	<script src="js/lib/jquery.min.js"></script>
-<!-- 	// <script src="js/lib/aud.js"></script> -->
-	<script src="js/main.js"></script>
-	<script src="js/ScenarioData.js"></script>
+	<style>
+	@font-face {
+		font-family: "AYearWithoutRain";
+		src: url(fonts/AYearWithoutRain.ttf);
+	}
+	body {background-color : #ccc; color: #;}
+	.title {
+		text-align: center;
+		color: #333;
+		font-family: AYearWithoutRain;
+	}
+	.game-container {
+		background-color : #e5e5e5;
+		width : 1000px;
+		position : relative;  
+		left : 50%;
+		margin-left : -500px;
+		border-style: solid;
+		border-width: 3px;
+		border-color: #999;
+	}
+	</style>
 </head>
 <body>
-
+<body>
+	<h2 class="title">WDWDN?</h2>
+	<div id="enchant-stage" class="game-container">
+		<script src="js/lib/enchant.js"></script>
+		<script src="js/lib/jquery.min.js"></script>
+		<script src="js/main.js"></script>
+		<script src="js/ScenarioData.js"></script>
+	</div>
 </body>
 </html>
