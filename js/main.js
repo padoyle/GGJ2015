@@ -57,7 +57,7 @@ var gHats = [];
 var gOptions = [];
 var gVotes = [null, null, null, null];
 
-var controllers = [];
+var controllers = [];  //0-3 = controllers. 4 = keyboard last vote. 5-8 = controllers' last vote
 
 //Base Classes
 var Hat = Class.create(Sprite, {
@@ -113,27 +113,33 @@ var initNewScenario = function() {
 	setScenario(gScenarios.intro);
 };
 
-var getVote = function() {
-	// if (controllers) {
-	// 	var array = [];
-	// 	array[0] = controllers[5];
-	// 	array[1] = controllers[6];
-	// 	array[2] = controllers[7];
-	// 	array[3] = controllers[8];
+var vote = function() {
+	updateControllers();
+	if (controllers) {
+		if (controllers[4] > 0) {
+			var rtn = controllers[4];
+			controllers[4] = 0;
+			return rtn;
+		}
+		var array = new Array();
+		array[0] = controllers[5];
+		array[1] = controllers[6];
+		array[2] = controllers[7];
+		array[3] = controllers[8];
+
+		if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
+			return null;
+		}
+		var num = array[Math.floor(Math.random() * 4)];
+		debug.text = "" + num;
 		
-	// 	if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
-	// 		return null;
-	// 	}
-	// 	var num = array[Math.floor(Math.random() * 4)];
-	// 	debug.text = "" + num;
+		controllers[5] = 0;
+		controllers[6] = 0;
+		controllers[7] = 0;
+		controllers[8] = 0;
 		
-	// 	controllers[5] = 0;
-	// 	controllers[6] = 0;
-	// 	controllers[7] = 0;
-	// 	controllers[8] = 0;
-		
-	// 	return num;
-	// }
+		return num;
+	}
 }
 
 var Start = new Class(Sprite, {
@@ -143,9 +149,28 @@ var Start = new Class(Sprite, {
 	},
 	onenterframe: function() {
 		updateControllers();
-		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.start]) {
+		if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.start])) {
 			game.rootScene.removeChild(this);
 			initNewScenario();
+		}
+	}
+});
+
+var Initial = new Class(Sprite, {
+	initialize: function() {
+		Sprite.call(this, gameWidth, gameHeight - labelHeight);
+		this.image = game.assets['images/initialScreen.png'];
+		this.init = false;
+		var initial = this;
+		setTimeout(function() {initial.init = true}, 500);
+	},
+	onenterframe: function() {
+		if (this.init) {
+			updateControllers();
+			if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.back])) {
+				game.rootScene.removeChild(this);
+				initNewScenario();
+			}
 		}
 	}
 });
@@ -179,19 +204,6 @@ var Victory = new Class(Sprite, {
 		}
 	}
 });
-
-// var Initial = new Class(Sprite, {
-// 	initialize: function() {
-// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-// 		this.image = game.assets['images/initialScreen.png'];
-// 	},
-// 	onenterframe: function() {
-// 		updateControllers();
-// 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
-// 			game.rootScene.removeChild(this);
-// 		}
-// 	}
-// });
 
 var ButtonText = Class.create(Label, {
 	initialize: function() {
@@ -361,7 +373,10 @@ var gameLoop = function(event) {
 	}
 	// This is really delicate right now; getButton can only be called once per loop if you
 	// want to actually pick up when it changes.
-	controllers[0].poll();
+	readKeyboard();
+	for (var i=0; i < controllers.length; i++) {
+		controllers[i].poll();
+	}
 	var votedOption = controllers[0].getVote();
 	console.log(votedOption);
 	if (votedOption > 0) {
@@ -381,6 +396,24 @@ var gameLoop = function(event) {
 	// 	}
 	// }
 };
+
+var readKeyboard = function() {
+	if (controllers) {
+		if (game.input['1']) {
+			controllers[4] = 1;
+		}
+		else if (game.input['2']) {
+			controllers[4] = 2;
+		}
+		else if (game.input['3']) {
+			controllers[4] = 3;
+		}
+		else if (game.input['4']) {
+			controllers[4] = 4;
+		}
+	}
+}
+
 
 // When document loads, set up basic game
 window.onload = function() {
@@ -403,6 +436,10 @@ window.onload = function() {
 	//Keybindings for the game
 	game.keybind(13, 'Enter');
 	game.keybind(27, 'Esc');
+	game.keybind(49, '1');
+	game.keybind(50, '2');
+	game.keybind(51, '3');
+	game.keybind(52, '4');
 
 	game.onload = function() {
 		start = new Start();
