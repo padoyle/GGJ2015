@@ -28,7 +28,7 @@ var CONT_INPUT = {
 var game;
 
 var gameWidth = 1000;
-var gameHeight = 650;
+var gameHeight = 700;
 
 var backgroundHeight = 100;
 var labelHeight = 100;
@@ -70,9 +70,9 @@ var Hat = Class.create(Sprite, {
 });
 
 var setEndingsText = function() {
-	 var text = "Endings reached (" + endingsReached.length + "/5):<br>";
+	 var text = "Endings reached (" + endingsReached.length + "/13):<br>";
 	 for (var i=0; i < endingsReached.length; i++) {
-	 	text += endingsReached[i].title + "<br>";
+	 	text += "  " + endingsReached[i].title + "<br>";
 	 }
 	 endingsLabel.text = text;
 }
@@ -110,26 +110,34 @@ var setupScene = function() {
 	descriptionLabel.font = "18px AYearWithoutRain";
 	game.rootScene.addChild(descriptionLabel);
 
-	background = new Background("images/bg.png", gHats);
+	background = new Background("images/intro1.jpg");
 	background.y = backgroundHeight;
 	background.height = (gameHeight - labelHeight) - backgroundHeight;
 
-	optionLabels[0] = new Option1();
-	optionLabels[1] = new Option2();
-	optionLabels[2] = new Option3();
-	optionLabels[3] = new Option4();
+	optionLabels[0] = new OptionLabel();
+	optionLabels[0].y = gameHeight - labelHeight + 1;
+	optionLabels[0].baseText = (controllers[0].type == "controller") ? "A. " : "1. ";
+	optionLabels[1] = new OptionLabel();
+	optionLabels[1].y = gameHeight - labelHeight * (3/4);
+	optionLabels[1].baseText = (controllers[0].type == "controller") ? "B. " : "2. ";
+	optionLabels[2] = new OptionLabel();
+	optionLabels[2].y = gameHeight - (labelHeight / 2);
+	optionLabels[2].baseText = (controllers[0].type == "controller") ? "Y. " : "3. ";
+	optionLabels[3] = new OptionLabel();
+	optionLabels[3].y = gameHeight - (labelHeight / 4);
+	optionLabels[3].baseText = (controllers[0].type == "controller") ? "X. " : "4. ";
 	
 	game.rootScene.addChild(optionLabels[0]);
 	game.rootScene.addChild(optionLabels[1]);
 	game.rootScene.addChild(optionLabels[2]);
 	game.rootScene.addChild(optionLabels[3]);
-		
+
 	wdwdnLabel = new ButtonText();
 	game.rootScene.addChild(wdwdnLabel);
 
 	endingsLabel = new Label();
 	endingsLabel.x = 10;
-	endingsLabel.y = backgroundHeight + 8;
+	endingsLabel.y = backgroundHeight + 6;
 	endingsLabel.text = "";
 	endingsLabel.font = "14px AYearWithoutRain"
 	game.rootScene.addChild(endingsLabel);
@@ -139,103 +147,31 @@ var setupScene = function() {
 	topDiv.y = backgroundHeight - 1;
 	var bottomDiv = new Divider();
 	bottomDiv.y = gameHeight - labelHeight - 1;
+	var middleDiv = new Divider();
+	middleDiv.height = labelHeight;
+	middleDiv.width = 2;
+	middleDiv.y = gameHeight - labelHeight;
+	middleDiv.x = 390;
 	game.rootScene.addChild(topDiv);
 	game.rootScene.addChild(bottomDiv);
+	game.rootScene.addChild(middleDiv);
 
 	setScenario(gScenarios.intro1);
 };
 
-// var vote = function() {
-// 	updateControllers();
-// 	if (controllers) {
-// 		if (controllers[4] > 0) {
-// 			var rtn = controllers[4];
-// 			controllers[4] = 0;
-// 			return rtn;
-// 		}
-// 		var array = new Array();
-// 		array[0] = controllers[5];
-// 		array[1] = controllers[6];
-// 		array[2] = controllers[7];
-// 		array[3] = controllers[8];
-
-// 		if (controllers[5] == 0 || controllers[6] == 0 || controllers[7] == 0 || controllers[8] == 0) {
-// 			return null;
-// 		}
-// 		var num = array[Math.floor(Math.random() * 4)];
-// 		endingsLabel.text = "" + num;
-		
-// 		controllers[5] = 0;
-// 		controllers[6] = 0;
-// 		controllers[7] = 0;
-// 		controllers[8] = 0;
-		
-// 		return num;
-// 	}
-// }
-
 var Start = new Class(Sprite, {
 	initialize: function() {
-		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-		this.image = game.assets['images/startScreen.png'];
+		Sprite.call(this, gameWidth, gameHeight);
+		this.image = game.assets['images/pressstart.jpg'];
 	},
 	onenterframe: function() {
 		updateControllers();
-		if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.start])) {
+		if (game.input['Enter'] || (controllers[0] && controllers[0].type == "controller" && controllers[0].controller.buttons[CONT_INPUT.start])) {
 			game.rootScene.removeChild(this);
 			setupScene();
 		}
 	}
 });
-
-// var Initial = new Class(Sprite, {
-// 	initialize: function() {
-// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-// 		this.image = game.assets['images/initialScreen.png'];
-// 		this.init = false;
-// 		var initial = this;
-// 		setTimeout(function() {initial.init = true}, 500);
-// 	},
-// 	onenterframe: function() {
-// 		if (this.init) {
-// 			updateControllers();
-// 			if (game.input['Enter'] || (controllers && controllers[0] && controllers[0].controller.buttons[CONT_INPUT.back])) {
-// 				game.rootScene.removeChild(this);
-// 				setupScene();
-// 			}
-// 		}
-// 	}
-// });
-
-// var Victory = new Class(Sprite, {
-// 	initialize: function() {
-// 		Sprite.call(this, gameWidth, gameHeight - labelHeight);
-// 		this.image = game.assets['images/victoryScreen.png'];
-// 		this.done = false;
-// 		this.show = false;
-// 		var vict = this;
-// 		setTimeout(function() {vict.done = true}, 5000); //Show victory screen for 5 seconds, then allow refresh
-// 	},
-// 	onenterframe: function() {
-// 		if (!this.done) {
-// 			return;
-// 		}
-// 		if (!this.show) {
-// 			var lab = new Label();
-// 			lab.x = 200;
-// 			lab.y = 300;
-// 			lab.color = 'white';
-// 			lab.text = "Press Select to Refresh Page";
-// 			game.rootScene.addChild(lab);
-// 		}
-// 		this.show = true;
-// 		updateControllers();
-// 		if (game.input['Enter'] || controllers[0].controller.buttons[CONT_INPUT.back]) {
-// 			game.stop();
-// 			location.reload();
-// 		}
-// 	}
-// });
 
 var Divider = Class.create(Label, {
 	initialize: function() {
@@ -249,50 +185,19 @@ var Divider = Class.create(Label, {
 var ButtonText = Class.create(Label, {
 	initialize: function() {
 		Label.call(this);
-		this.font = "18px AYearWithoutRain";
+		this.font = "20px AYearWithoutRain";
 		this.x = 50;
 		this.y = gameHeight - (labelHeight * 3 / 4);
 		this.text = "PUSH THE BUTTON";
 	}
 });
 
-var Option1 = Class.create(Label, {
+var OptionLabel = Class.create(Label, {
+	baseText: "",
 	initialize: function() {
 		Label.call(this);
-		this.baseText = "Y. ";
 		this.x = 400;
 		this.width = gameWidth - this.x;
-		this.y = gameHeight - labelHeight + 1;
-	}
-});
-
-var Option2 = Class.create(Label, {
-	initialize: function() {
-		Label.call(this);
-		this.baseText = "B. ";
-		this.x = 400;
-		this.width = gameWidth - this.x;
-		this.y = gameHeight - labelHeight * (3/4);
-	}
-});
-
-var Option3 = Class.create(Label, {
-	initialize: function() {
-		Label.call(this);
-		this.baseText = "A. ";
-		this.x = 400;
-		this.width = gameWidth - this.x;
-		this.y = gameHeight - (labelHeight / 2);
-	}
-});
-
-var Option4 = Class.create(Label, {
-	initialize: function() {
-		Label.call(this);
-		this.baseText = "X. ";
-		this.x = 400;
-		this.width = gameWidth - this.x;
-		this.y = gameHeight - (labelHeight / 4);
 	}
 });
 
@@ -300,6 +205,7 @@ var Controller = Class.create(Object, {
 	initialize: function(controller, set, numY, numB, numA, numX) {
 		Object.call(this);
 		this.pressed = false;
+		this.type = "controller";
 		this.vote = 0;
 		this.controller = controller;
 		this.set = set;
@@ -332,13 +238,13 @@ var Controller = Class.create(Object, {
 			}
 		}
 		else if (this.set == "buttons") {
-			if (this.controller.buttons[this.numY]) {
+			if (this.controller.buttons[this.numA]) {
 				newValue = 1;
 			}
 			else if (this.controller.buttons[this.numB]) {
 				newValue = 2;
 			}
-			else if (this.controller.buttons[this.numA]) {
+			else if (this.controller.buttons[this.numY]) {
 				newValue = 3;
 			}
 			else if (this.controller.buttons[this.numX]) {
@@ -375,33 +281,10 @@ function updateControllers() {
 				devices.push(navigator.webkitGetGamepads()[i]);
 			}
 		}
-		if (devices.length == 4) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[1] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[2] = new Controller(devices[2], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[3] = new Controller(devices[3], "buttons", 3, 1, 0, 2); //Y B A X
+		if (devices.length > 0) {
+			controllers.push(new Controller(devices[0], "buttons", 3, 1, 0, 2));			
 		}
-		else if (devices.length == 3) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
-			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[3] = new Controller(devices[2], "buttons", 3, 1, 0, 2); //Y B A X
-		}
-		else if (devices.length == 2) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
-			controllers[2] = new Controller(devices[1], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[3] = new Controller(devices[1], "buttons", 12, 15, 13, 14); //Up Right Down Left
-		}
-		else if (devices.length == 1) {
-			controllers[0] = new Controller(devices[0], "buttons", 3, 1, 0, 2); //Y B A X
-			controllers[1] = new Controller(devices[0], "buttons", 12, 15, 13, 14); //Up Right Down Left
-			controllers[3] = new Controller(devices[0], "axes", 3, 2, 0, 0); //Right Stick X-axis=2 Y-axis=3
-			controllers[2] = new Controller(devices[0], "axes", 1, 0, 0, 0); //Left Stick X-axis=0 Y-axis=1
-		}	
-		else {
-			console.log("no controllers detected");
-		}
+		controllers.push(new Keyboard());
 	}
 }
 
@@ -409,9 +292,9 @@ var gameLoop = function(event) {
 	updateControllers();
 	// This is really delicate right now; getButton can only be called once per loop if you
 	// want to actually pick up when it changes.
-	readKeyboard();
-	for (var i=0; i < controllers.length; i++) {
-		controllers[i].poll();
+	for (var i=0; i < 4; i++) {
+		if (controllers[i])
+			controllers[i].poll();
 	}
 	for (var i=0; i < optionLabels.length; i++) {
 		optionLabels[i].font = "16px AYearWithoutRain";
@@ -432,29 +315,51 @@ var gameLoop = function(event) {
 	}
 };
 
-var readKeyboard = function() {
-	if (controllers) {
+var Keyboard = Class.create(Controller, {
+	initialize: function() {
+		Controller.call(this);
+		this.type = "keyboard";
+		this.pressed = false;
+		this.vote = 0;
+	},
+
+	poll: function() {
+		var newValue = 0;
 		if (game.input['1']) {
-			controllers[4] = 1;
+			newValue = 1;
 		}
 		else if (game.input['2']) {
-			controllers[4] = 2;
+			newValue = 2;
 		}
 		else if (game.input['3']) {
-			controllers[4] = 3;
+			newValue = 3;
 		}
 		else if (game.input['4']) {
-			controllers[4] = 4;
+			newValue = 4;
 		}
-	}
-}
+		if (newValue > 0)
+			this.pressed = true;
+		else
+			this.pressed = false;
 
+		if (this.pressed) {
+			this.vote = newValue;
+		}
+	},
+
+	getVote: function() {
+		return (this.pressed) ? 0 : this.vote;
+	},
+
+	clearVote: function() {
+		this.vote = 0;
+	}
+})
 
 // When document loads, set up basic game
 window.onload = function() {
 	game = new Game(gameWidth, gameHeight);
-	game.preload('images/bg.png', 'images/hat.png', 'images/victoryScreen.png',
-	              'images/startScreen.png', 'images/initialScreen.png', 
+	game.preload( 'images/pressstart.jpg',
 	              'images/beer1.jpg',
 	              'images/beer2.jpg',
 	              'images/beer3.jpg',
@@ -463,21 +368,33 @@ window.onload = function() {
 	              'images/beer6.jpg',
 	              'images/beer7.jpg',
 	              'images/catnami1.jpg',
-	              'images/catastrophe.jpg',
+	              'images/catnami2.jpg',
+	              'images/catnami3.jpg',
+	              'images/catnami4.jpg',
+	              'images/catnami5.jpg',
 	              'images/falling1.jpg',
-	              'images/furniture.jpg',
+	              'images/furniture1.jpg',
+	              'images/furniture2.jpg',
 	              'images/genericdeath.jpg',
 	              'images/intro1.jpg',
 	              'images/intro2.jpg',
 	              'images/ml1.jpg',
 	              'images/ml2.jpg',
+	              'images/ml2.5.jpg',
 	              'images/ml3.jpg',
 	              'images/ml4.jpg',
 	              'images/ml5.jpg',
 	              'images/ml6.jpg',
 	              'images/mlend.jpg',
 	              'images/moa1.jpg',
-	              'images/moa2.jpg');
+	              'images/moa2.jpg',
+	              'images/moa3.jpg',
+	              'images/monkies1.jpg',
+	              'images/monkies2.jpg',
+	              'images/monkies3.jpg',
+	              'images/monkies4.jpg',
+	              'images/monkies5.jpg',
+	              'images/monkies6.jpg' );
 
 	
 	game.fps = 60;
